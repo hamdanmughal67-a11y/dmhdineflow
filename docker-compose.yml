@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # Backend API & WebSocket Service
+  dineflow-server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: dineflow_backend
+    restart: always
+    environment:
+      - PORT=3001
+      - JWT_SECRET=dmh_dineflow_production_super_secret_key_2026
+      - UPLOAD_DIR=/app/uploads
+      - DB_PATH=/app/data/db.json
+      - FRONTEND_URL=http://localhost
+    volumes:
+      - dineflow_data:/app/data
+      - dineflow_uploads:/app/uploads
+    networks:
+      - dineflow_net
+    ports:
+      - "3001:3001"
+
+  # Frontend Web & Reverse Proxy Service
+  dineflow-client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: dineflow_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - dineflow-server
+    networks:
+      - dineflow_net
+
+volumes:
+  dineflow_data:
+    driver: local
+  dineflow_uploads:
+    driver: local
+
+networks:
+  dineflow_net:
+    driver: bridge
